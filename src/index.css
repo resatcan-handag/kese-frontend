@@ -933,3 +933,40 @@ select.control {
   opacity: 0.6;
   cursor: default;
 }
+
+/* ---------- CSV içe aktarma ---------- */
+.csv-preview {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+  margin: 6px 0 4px;
+}
+.csv-preview table {
+  font-size: 13px;
+}
+.csv-preview th,
+.csv-preview td {
+  padding: 9px 12px;
+  border-bottom: 1px solid var(--line);
+  text-align: left;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 160px;
+}
+.csv-preview thead th {
+  font-size: 11px;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: var(--mist);
+  font-weight: 600;
+}
+.csv-preview tbody tr:last-child td {
+  border-bottom: none;
+}
+.csv-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 16px;
+}

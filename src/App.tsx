@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { Routes, Route, Outlet, NavLink, useOutletContext } from "react-router-dom";
 import { Icon } from "./icons";
-import { api, type SummaryResponse, type ApiTransaction } from "./api";
+import { api, type SummaryResponse, type ApiTransaction, type TrendResponse, type ReceiptReview } from "./api";
 import { formatTL, formatDateShort, initial } from "./format";
 import { AddTransactionModal, ReceiptModal } from "./components/Modals";
+import { TrendChart } from "./components/TrendChart";
 
 type Ctx = { openAdd: () => void; refreshKey: number };
 
@@ -56,15 +57,17 @@ function Dashboard() {
   const [summary, setSummary] = useState<SummaryResponse | null>(null);
   const [insight, setInsight] = useState("");
   const [recent, setRecent] = useState<ApiTransaction[]>([]);
+  const [trend, setTrend] = useState<TrendResponse | null>(null);
 
   useEffect(() => {
     let active = true;
-    Promise.all([api.getSummary(), api.getInsights(), api.getTransactions()])
-      .then(([s, ins, txns]) => {
+    Promise.all([api.getSummary(), api.getInsights(), api.getTransactions(), api.getTrend()])
+      .then(([s, ins, txns, tr]) => {
         if (!active) return;
         setSummary(s);
         setInsight(ins.text);
         setRecent(txns.slice(0, 5));
+        setTrend(tr);
         setError(false);
         setLoading(false);
       })
@@ -146,40 +149,13 @@ function Dashboard() {
         <div className="card">
           <div className="card-head">
             <h2 className="card-title">Günlük harcama</h2>
-            <span className="more">Haziran</span>
+            <span className="more">{trend?.label ?? ""}</span>
           </div>
-          {/* TODO: günlük seri için backend'e /dashboard/trend ucu eklenince gerçek veriyle değişecek */}
-          <svg
-            className="chart"
-            viewBox="0 0 320 124"
-            preserveAspectRatio="none"
-            role="img"
-            aria-label="Günlük harcama eğrisi (örnek)"
-          >
-            <line x1="10" y1="104" x2="310" y2="104" stroke="#e3e7e1" strokeWidth={1} />
-            <line x1="10" y1="66" x2="310" y2="66" stroke="#eef1ee" strokeWidth={1} />
-            <path
-              d="M10 80 L31 60 L53 72 L74 44 L96 58 L117 38 L139 68 L160 50 L182 30 L203 62 L225 42 L246 74 L268 48 L289 34 L310 52 L310 104 L10 104 Z"
-              fill="#1b5e45"
-              fillOpacity={0.1}
-            />
-            <path
-              d="M10 80 L31 60 L53 72 L74 44 L96 58 L117 38 L139 68 L160 50 L182 30 L203 62 L225 42 L246 74 L268 48 L289 34 L310 52"
-              fill="none"
-              stroke="#1b5e45"
-              strokeWidth={2}
-              strokeLinejoin="round"
-              strokeLinecap="round"
-            />
-            <circle cx="182" cy="30" r="3.5" fill="#1b5e45" />
-          </svg>
-          <div className="chart-x">
-            <span>1</span>
-            <span>8</span>
-            <span>15</span>
-            <span>22</span>
-            <span>30 Haz</span>
-          </div>
+          {trend ? (
+            <TrendChart points={trend.points} />
+          ) : (
+            <div className="state">Yükleniyor…</div>
+          )}
         </div>
       </section>
 
@@ -325,16 +301,23 @@ function Transactions() {
 function Layout() {
   const [addOpen, setAddOpen] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
+  const [receiptData, setReceiptData] = useState<ReceiptReview | null>(null);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const openAdd = () => setAddOpen(true);
-  const openReceipt = () => {
+  // Fiş taranınca AddModal'ı kapat, okunan alanları onay modalına aktar.
+  const handleScanned = (review: ReceiptReview) => {
+    setReceiptData(review);
     setAddOpen(false);
     setReceiptOpen(true);
   };
   const handleCreated = () => {
     setRefreshKey((k) => k + 1);
     setAddOpen(false);
+  };
+  const handleConfirmed = () => {
+    setRefreshKey((k) => k + 1);
+    setReceiptOpen(false);
   };
 
   return (
@@ -347,9 +330,14 @@ function Layout() {
         open={addOpen}
         onClose={() => setAddOpen(false)}
         onCreated={handleCreated}
-        onScan={openReceipt}
+        onScanned={handleScanned}
       />
-      <ReceiptModal open={receiptOpen} onClose={() => setReceiptOpen(false)} />
+      <ReceiptModal
+        open={receiptOpen}
+        onClose={() => setReceiptOpen(false)}
+        data={receiptData}
+        onConfirmed={handleConfirmed}
+      />
     </div>
   );
 }
