@@ -1,0 +1,42 @@
+# Bağımlılıklar
+node_modules/
+.pnp
+.pnp.js
+
+# Derleme çıktısı
+dist/
+dist-ssr/
+build/
+
+# Ortam değişkenleri (gizli — commit'lenmez; örnek dosya hariç)
+.env
+.env.*
+!.env.example
+
+# Loglar
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# TypeScript
+*.tsbuildinfo
+
+# Editör / IDE
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.sw?
+
+# İşletim sistemi
+.DS_Store
+Thumbs.db
+
+# Önbellek / test
+.eslintcache
+.cache/
+coverage/
+
+# Vite yerel dosyaları
+*.local
