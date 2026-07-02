@@ -1050,3 +1050,74 @@ select.control {
   height: 40px;
   font-family: "IBM Plex Mono", monospace;
 }
+
+/* ---------- Ayarlar ---------- */
+.set-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 13px 4px;
+  border-bottom: 1px solid var(--line);
+}
+.set-row:last-child {
+  border-bottom: none;
+}
+.set-key {
+  color: var(--mist);
+  font-size: 13.5px;
+  font-weight: 600;
+}
+.set-val {
+  font-size: 14px;
+  font-weight: 500;
+  text-align: right;
+}
+.set-val.mono {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 13px;
+  color: var(--mist);
+}
+.cm-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 4px;
+  border-bottom: 1px solid var(--line);
+}
+.cm-name {
+  font-weight: 500;
+  font-size: 14px;
+}
+.cm-del {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--mist);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  flex: none;
+}
+.cm-del:hover {
+  color: var(--coral);
+  border-color: var(--coral);
+}
+.cat-add {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 16px;
+}
+.color-swatch {
+  width: 44px;
+  height: 44px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 11px;
+  background: var(--card);
+  cursor: pointer;
+  flex: none;
+}

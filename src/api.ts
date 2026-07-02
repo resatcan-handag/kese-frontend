@@ -26,6 +26,12 @@ async function putJSON<T>(path: string, body: unknown): Promise<T> {
   return (await res.json()) as T;
 }
 
+async function delJSON<T>(path: string): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, { method: "DELETE" });
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  return (await res.json()) as T;
+}
+
 export interface ApiCategory {
   id: string;
   name: string;
@@ -110,6 +116,17 @@ export interface BudgetsResponse {
   items: BudgetItem[];
 }
 
+export interface MeResponse {
+  id: string;
+  email: string;
+  createdAt: string;
+}
+
+export interface CreateCategoryInput {
+  name: string;
+  color?: string;
+}
+
 export const api = {
   getSummary: () => getJSON<SummaryResponse>("/dashboard/summary"),
   getInsights: () => getJSON<{ text: string }>("/dashboard/insights"),
@@ -128,4 +145,8 @@ export const api = {
   getBudgets: () => getJSON<BudgetsResponse>("/budgets"),
   setBudget: (categoryId: string, limit: number) =>
     putJSON<{ ok: boolean }>("/budgets", { categoryId, limit }),
+  getMe: () => getJSON<MeResponse>("/users/me"),
+  createCategory: (input: CreateCategoryInput) =>
+    postJSON<ApiCategory>("/categories", input),
+  deleteCategory: (id: string) => delJSON<{ ok: boolean }>(`/categories/${id}`),
 };

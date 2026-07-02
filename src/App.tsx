@@ -6,6 +6,7 @@ import { formatTL, formatDateShort, initial } from "./format";
 import { AddTransactionModal, ReceiptModal } from "./components/Modals";
 import { TrendChart } from "./components/TrendChart";
 import { BudgetPage } from "./components/BudgetPage";
+import { SettingsPage } from "./components/SettingsPage";
 
 type Ctx = { openAdd: () => void; refreshKey: number };
 
@@ -33,10 +34,10 @@ function Sidebar() {
           <Icon name="budget" />
           <span>Bütçe</span>
         </NavLink>
-        <a className="nav-item" href="#">
+        <NavLink to="/ayarlar" className={linkClass}>
           <Icon name="settings" />
           <span>Ayarlar</span>
-        </a>
+        </NavLink>
       </nav>
       <div className="side-foot">
         <span className="avatar">A</span>
@@ -350,6 +351,7 @@ export default function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/islemler" element={<Transactions />} />
         <Route path="/butce" element={<BudgetPage />} />
+        <Route path="/ayarlar" element={<SettingsPage />} />
       </Route>
     </Routes>
   );
