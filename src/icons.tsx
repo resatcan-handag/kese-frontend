@@ -15,7 +15,8 @@ export type IconName =
   | "left"
   | "right"
   | "check"
-  | "upload";
+  | "upload"
+  | "logout";
 
 const paths: Record<IconName, ReactNode> = {
   home: (
@@ -63,6 +64,12 @@ const paths: Record<IconName, ReactNode> = {
     <>
       <path d="M12 15V4M8 8l4-4 4 4" />
       <path d="M5 16v3h14v-3" />
+    </>
+  ),
+  logout: (
+    <>
+      <path d="M14 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-2" />
+      <path d="M10 12h10M17 9l3 3-3 3" />
     </>
   ),
 };

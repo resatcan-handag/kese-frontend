@@ -1,35 +1,65 @@
 const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:3000/api";
+const TOKEN_KEY = "kese_token";
 
-async function getJSON<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`);
+// --- Oturum token'i (localStorage) ---
+export function getToken(): string | null {
+  return localStorage.getItem(TOKEN_KEY);
+}
+export function setToken(token: string): void {
+  localStorage.setItem(TOKEN_KEY, token);
+}
+export function clearToken(): void {
+  localStorage.removeItem(TOKEN_KEY);
+}
+
+function authHeaders(json: boolean): Record<string, string> {
+  const h: Record<string, string> = {};
+  if (json) h["Content-Type"] = "application/json";
+  const t = getToken();
+  if (t) h["Authorization"] = `Bearer ${t}`;
+  return h;
+}
+
+// 401'de token'i temizle ve uygulamayi giris ekranina dusur.
+async function handle<T>(res: Response): Promise<T> {
+  if (res.status === 401) {
+    clearToken();
+    window.dispatchEvent(new Event("kese-unauth"));
+    throw new Error("API 401");
+  }
   if (!res.ok) throw new Error(`API ${res.status}`);
   return (await res.json()) as T;
+}
+
+async function getJSON<T>(path: string): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, { headers: authHeaders(false) });
+  return handle<T>(res);
 }
 
 async function postJSON<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders(true),
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`API ${res.status}`);
-  return (await res.json()) as T;
+  return handle<T>(res);
 }
 
 async function putJSON<T>(path: string, body: unknown): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: "PUT",
-    headers: { "Content-Type": "application/json" },
+    headers: authHeaders(true),
     body: JSON.stringify(body),
   });
-  if (!res.ok) throw new Error(`API ${res.status}`);
-  return (await res.json()) as T;
+  return handle<T>(res);
 }
 
 async function delJSON<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { method: "DELETE" });
-  if (!res.ok) throw new Error(`API ${res.status}`);
-  return (await res.json()) as T;
+  const res = await fetch(`${BASE}${path}`, {
+    method: "DELETE",
+    headers: authHeaders(false),
+  });
+  return handle<T>(res);
 }
 
 export interface ApiCategory {
@@ -122,6 +152,11 @@ export interface MeResponse {
   createdAt: string;
 }
 
+export interface AuthResponse {
+  token: string;
+  user: MeResponse;
+}
+
 export interface CreateCategoryInput {
   name: string;
   color?: string;
@@ -149,4 +184,14 @@ export const api = {
   createCategory: (input: CreateCategoryInput) =>
     postJSON<ApiCategory>("/categories", input),
   deleteCategory: (id: string) => delJSON<{ ok: boolean }>(`/categories/${id}`),
+  register: async (email: string, password: string) => {
+    const res = await postJSON<AuthResponse>("/auth/register", { email, password });
+    setToken(res.token);
+    return res;
+  },
+  login: async (email: string, password: string) => {
+    const res = await postJSON<AuthResponse>("/auth/login", { email, password });
+    setToken(res.token);
+    return res;
+  },
 };

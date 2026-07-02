@@ -99,7 +99,7 @@ export function SettingsPage() {
           <section className="card">
             <div className="card-head">
               <h2 className="card-title">Profil</h2>
-              <span className="ai-tag">Demo · Auth yok</span>
+              <span className="ai-tag">Oturum açık</span>
             </div>
             <div className="set-row">
               <span className="set-key">E-posta</span>

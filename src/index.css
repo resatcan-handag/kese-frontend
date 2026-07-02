@@ -1121,3 +1121,84 @@ select.control {
   cursor: pointer;
   flex: none;
 }
+
+/* ---------- Kenar çubuğu kullanıcı + çıkış ---------- */
+.side-user {
+  flex: 1;
+  min-width: 0;
+}
+.side-foot .nm,
+.side-foot .em {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.logout-btn {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  border: 1px solid var(--line);
+  background: var(--card);
+  color: var(--mist);
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+}
+.logout-btn:hover {
+  color: var(--coral);
+  border-color: var(--coral);
+}
+
+/* ---------- Giriş / kayıt ---------- */
+.auth-wrap {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  background: var(--paper);
+}
+.auth-card {
+  width: 100%;
+  max-width: 400px;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 18px;
+  padding: 30px 28px;
+  box-shadow: 0 10px 40px rgba(20, 32, 27, 0.08);
+}
+.auth-brand {
+  margin-bottom: 20px;
+}
+.auth-title {
+  font-family: "Bricolage Grotesque";
+  font-size: 24px;
+  margin: 0 0 4px;
+}
+.auth-sub {
+  color: var(--mist);
+  font-size: 13.5px;
+  margin: 0 0 20px;
+}
+.auth-seg {
+  display: flex;
+  width: 100%;
+  margin-bottom: 20px;
+}
+.auth-seg .seg-btn {
+  flex: 1;
+  justify-content: center;
+}
+.auth-submit {
+  width: 100%;
+  justify-content: center;
+  margin-top: 4px;
+}
+.auth-demo {
+  text-align: center;
+  color: var(--mist);
+  font-size: 12.5px;
+  font-family: "IBM Plex Mono", monospace;
+  margin: 18px 0 0;
+}

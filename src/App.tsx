@@ -1,16 +1,30 @@
 import { useState, useEffect } from "react";
 import { Routes, Route, Outlet, NavLink, useOutletContext } from "react-router-dom";
 import { Icon } from "./icons";
-import { api, type SummaryResponse, type ApiTransaction, type TrendResponse, type ReceiptReview } from "./api";
+import {
+  api,
+  getToken,
+  clearToken,
+  type SummaryResponse,
+  type ApiTransaction,
+  type TrendResponse,
+  type ReceiptReview,
+  type MeResponse,
+} from "./api";
 import { formatTL, formatDateShort, initial } from "./format";
 import { AddTransactionModal, ReceiptModal } from "./components/Modals";
 import { TrendChart } from "./components/TrendChart";
 import { BudgetPage } from "./components/BudgetPage";
 import { SettingsPage } from "./components/SettingsPage";
+import { AuthPage } from "./components/AuthPage";
+import { AuthContext, useAuth } from "./authContext";
 
 type Ctx = { openAdd: () => void; refreshKey: number };
 
 function Sidebar() {
+  const { me, logout } = useAuth();
+  const email = me?.email ?? "";
+  const name = email ? email.split("@")[0] : "Kullanıcı";
   const linkClass = ({ isActive }: { isActive: boolean }) =>
     "nav-item" + (isActive ? " active" : "");
   return (
@@ -40,11 +54,14 @@ function Sidebar() {
         </NavLink>
       </nav>
       <div className="side-foot">
-        <span className="avatar">A</span>
-        <div>
-          <div className="nm">Ada Yılmaz</div>
-          <div className="em">ada@kese.app</div>
+        <span className="avatar">{(email[0] ?? "K").toUpperCase()}</span>
+        <div className="side-user">
+          <div className="nm">{name}</div>
+          <div className="em">{email || "—"}</div>
         </div>
+        <button className="logout-btn" onClick={logout} title="Çıkış" aria-label="Çıkış">
+          <Icon name="logout" size={18} />
+        </button>
       </div>
     </aside>
   );
@@ -345,14 +362,56 @@ function Layout() {
 }
 
 export default function App() {
+  const [token, setToken] = useState<string | null>(() => getToken());
+  const [me, setMe] = useState<MeResponse | null>(null);
+
+  // Token varsa profili çek; geçersizse çıkış.
+  useEffect(() => {
+    if (!token) {
+      setMe(null);
+      return;
+    }
+    let active = true;
+    api
+      .getMe()
+      .then((u) => {
+        if (active) setMe(u);
+      })
+      .catch(() => {
+        if (active) {
+          clearToken();
+          setToken(null);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [token]);
+
+  // API katmanı 401'de bu olayı yayar → oturumu kapat.
+  useEffect(() => {
+    const onUnauth = () => setToken(null);
+    window.addEventListener("kese-unauth", onUnauth);
+    return () => window.removeEventListener("kese-unauth", onUnauth);
+  }, []);
+
+  const logout = () => {
+    clearToken();
+    setToken(null);
+  };
+
+  if (!token) return <AuthPage onAuthed={() => setToken(getToken())} />;
+
   return (
-    <Routes>
-      <Route element={<Layout />}>
-        <Route path="/" element={<Dashboard />} />
-        <Route path="/islemler" element={<Transactions />} />
-        <Route path="/butce" element={<BudgetPage />} />
-        <Route path="/ayarlar" element={<SettingsPage />} />
-      </Route>
-    </Routes>
+    <AuthContext.Provider value={{ me, logout }}>
+      <Routes>
+        <Route element={<Layout />}>
+          <Route path="/" element={<Dashboard />} />
+          <Route path="/islemler" element={<Transactions />} />
+          <Route path="/butce" element={<BudgetPage />} />
+          <Route path="/ayarlar" element={<SettingsPage />} />
+        </Route>
+      </Routes>
+    </AuthContext.Provider>
   );
 }
