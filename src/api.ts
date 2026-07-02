@@ -16,6 +16,16 @@ async function postJSON<T>(path: string, body: unknown): Promise<T> {
   return (await res.json()) as T;
 }
 
+async function putJSON<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    method: "PUT",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!res.ok) throw new Error(`API ${res.status}`);
+  return (await res.json()) as T;
+}
+
 export interface ApiCategory {
   id: string;
   name: string;
@@ -83,6 +93,23 @@ export interface ImportCsvRow {
   categoryId?: string;
 }
 
+export interface BudgetItem {
+  categoryId: string;
+  category: string;
+  color: string;
+  budgetId: string | null;
+  limit: number | null;
+  spent: number;
+}
+
+export interface BudgetsResponse {
+  period: string;
+  label: string;
+  totalLimit: number;
+  totalSpent: number;
+  items: BudgetItem[];
+}
+
 export const api = {
   getSummary: () => getJSON<SummaryResponse>("/dashboard/summary"),
   getInsights: () => getJSON<{ text: string }>("/dashboard/insights"),
@@ -98,4 +125,7 @@ export const api = {
     postJSON<ApiTransaction>(`/receipts/${id}/confirm`, input),
   importCsv: (rows: ImportCsvRow[]) =>
     postJSON<{ created: number }>("/import/csv", { rows }),
+  getBudgets: () => getJSON<BudgetsResponse>("/budgets"),
+  setBudget: (categoryId: string, limit: number) =>
+    putJSON<{ ok: boolean }>("/budgets", { categoryId, limit }),
 };

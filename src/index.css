@@ -970,3 +970,83 @@ select.control {
   gap: 10px;
   margin-top: 16px;
 }
+
+/* ---------- Bütçe ---------- */
+.bud-total {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin: 6px 0 12px;
+}
+.bud-total-spent {
+  font-family: "IBM Plex Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 30px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.bud-total-spent.over {
+  color: var(--coral);
+}
+.bud-total-limit {
+  font-family: "IBM Plex Mono", monospace;
+  color: var(--mist);
+  font-size: 15px;
+}
+.bud-row {
+  padding: 14px 4px;
+  border-bottom: 1px solid var(--line);
+}
+.bud-row:last-child {
+  border-bottom: none;
+}
+.bud-head {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.bud-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+.bud-amt {
+  font-family: "IBM Plex Mono", monospace;
+  font-variant-numeric: tabular-nums;
+  font-size: 13.5px;
+  color: var(--mist);
+}
+.bud-amt.over {
+  color: var(--coral);
+  font-weight: 600;
+}
+.bud-bar {
+  height: 8px;
+  border-radius: 6px;
+  background: #eef1ee;
+  overflow: hidden;
+  margin: 10px 0;
+}
+.bud-bar.big {
+  height: 12px;
+  margin: 4px 0 2px;
+}
+.bud-fill {
+  display: block;
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.25s ease;
+}
+.bud-edit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.bud-cur {
+  color: var(--mist);
+  font-family: "IBM Plex Mono", monospace;
+}
+.bud-input {
+  width: 150px;
+  height: 40px;
+  font-family: "IBM Plex Mono", monospace;
+}

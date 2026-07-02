@@ -5,6 +5,7 @@ import { api, type SummaryResponse, type ApiTransaction, type TrendResponse, typ
 import { formatTL, formatDateShort, initial } from "./format";
 import { AddTransactionModal, ReceiptModal } from "./components/Modals";
 import { TrendChart } from "./components/TrendChart";
+import { BudgetPage } from "./components/BudgetPage";
 
 type Ctx = { openAdd: () => void; refreshKey: number };
 
@@ -28,10 +29,10 @@ function Sidebar() {
           <Icon name="list" />
           <span>İşlemler</span>
         </NavLink>
-        <a className="nav-item" href="#">
+        <NavLink to="/butce" className={linkClass}>
           <Icon name="budget" />
           <span>Bütçe</span>
-        </a>
+        </NavLink>
         <a className="nav-item" href="#">
           <Icon name="settings" />
           <span>Ayarlar</span>
@@ -348,6 +349,7 @@ export default function App() {
       <Route element={<Layout />}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/islemler" element={<Transactions />} />
+        <Route path="/butce" element={<BudgetPage />} />
       </Route>
     </Routes>
   );
