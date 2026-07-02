@@ -296,6 +296,18 @@ a {
   line-height: 1.55;
   margin: 0;
 }
+.ai-thinking {
+  animation: ai-pulse 1.2s ease-in-out infinite;
+}
+@keyframes ai-pulse {
+  0%,
+  100% {
+    opacity: 0.45;
+  }
+  50% {
+    opacity: 0.85;
+  }
+}
 .ai-link {
   display: inline-flex;
   align-items: center;

@@ -28,12 +28,17 @@ export function AuthPage({ onAuthed }: { onAuthed: () => void }) {
       if (mode === "login") await api.login(mail, password);
       else await api.register(mail, password);
       onAuthed();
-    } catch {
-      setErr(
-        mode === "login"
-          ? "E-posta veya şifre hatalı."
-          : "Kayıt başarısız. Bu e-posta kullanılıyor olabilir.",
-      );
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : "";
+      if (msg === "API 401") {
+        setErr("E-posta veya şifre hatalı.");
+      } else if (msg === "API 409") {
+        setErr("Bu e-posta zaten kayıtlı. Giriş yapmayı dene.");
+      } else if (msg.startsWith("API ")) {
+        setErr("Sunucu hatası. Lütfen tekrar dene.");
+      } else {
+        setErr("Sunucuya ulaşılamadı. Backend çalışıyor mu? (http://localhost:3000/api)");
+      }
     } finally {
       setBusy(false);
     }

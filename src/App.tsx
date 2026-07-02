@@ -75,16 +75,17 @@ function Dashboard() {
   const [error, setError] = useState(false);
   const [summary, setSummary] = useState<SummaryResponse | null>(null);
   const [insight, setInsight] = useState("");
+  const [insightLoading, setInsightLoading] = useState(true);
   const [recent, setRecent] = useState<ApiTransaction[]>([]);
   const [trend, setTrend] = useState<TrendResponse | null>(null);
 
+  // Ana pano verisi (hızlı) — sayfayı bunlar açar.
   useEffect(() => {
     let active = true;
-    Promise.all([api.getSummary(), api.getInsights(), api.getTransactions(), api.getTrend()])
-      .then(([s, ins, txns, tr]) => {
+    Promise.all([api.getSummary(), api.getTransactions(), api.getTrend()])
+      .then(([s, txns, tr]) => {
         if (!active) return;
         setSummary(s);
-        setInsight(ins.text);
         setRecent(txns.slice(0, 5));
         setTrend(tr);
         setError(false);
@@ -94,6 +95,27 @@ function Dashboard() {
         if (!active) return;
         setError(true);
         setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [refreshKey]);
+
+  // AI içgörü ayrı yüklenir (Ollama yavaş olabilir; sayfayı bloklamasın).
+  useEffect(() => {
+    let active = true;
+    setInsightLoading(true);
+    api
+      .getInsights()
+      .then((ins) => {
+        if (!active) return;
+        setInsight(ins.text);
+        setInsightLoading(false);
+      })
+      .catch(() => {
+        if (!active) return;
+        setInsight("");
+        setInsightLoading(false);
       });
     return () => {
       active = false;
@@ -139,7 +161,11 @@ function Dashboard() {
           <div className="ai-badge">
             <Icon name="spark" size={16} />AI İçgörü
           </div>
-          <p className="ai-text">{insight}</p>
+          {insightLoading ? (
+            <p className="ai-text ai-thinking">AI düşünüyor…</p>
+          ) : (
+            <p className="ai-text">{insight || "İçgörü alınamadı."}</p>
+          )}
         </div>
       </section>
 
