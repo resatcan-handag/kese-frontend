@@ -197,9 +197,10 @@ export const api = {
     postJSON<ApiTransaction>(`/receipts/${id}/confirm`, input),
   importCsv: (rows: ImportCsvRow[]) =>
     postJSON<{ created: number }>("/import/csv", { rows }),
-  getBudgets: () => getJSON<BudgetsResponse>("/budgets"),
-  setBudget: (categoryId: string, limit: number) =>
-    putJSON<{ ok: boolean }>("/budgets", { categoryId, limit }),
+  getBudgets: (month?: string) =>
+    getJSON<BudgetsResponse>(`/budgets${month ? `?month=${month}` : ""}`),
+  setBudget: (categoryId: string, limit: number, month?: string) =>
+    putJSON<{ ok: boolean }>("/budgets", { categoryId, limit, month }),
   getMe: () => getJSON<MeResponse>("/users/me"),
   changePassword: (currentPassword: string, newPassword: string) =>
     postJSON<{ ok: boolean }>("/users/change-password", { currentPassword, newPassword }),

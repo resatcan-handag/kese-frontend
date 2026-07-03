@@ -5,12 +5,26 @@ import { formatTL } from "../format";
 
 const API_ERR = "API'ye ulaşılamadı. Backend çalışıyor mu? (http://localhost:3000/api)";
 
+// "2026-06" -> "Haziran 2026"
+function monthLabel(m: string): string {
+  const [y, mo] = m.split("-").map(Number);
+  return new Date(y, mo - 1, 1).toLocaleDateString("tr-TR", { month: "long", year: "numeric" });
+}
+
 function pct(spent: number, limit: number | null): number {
   if (!limit || limit <= 0) return 0;
   return Math.min((spent / limit) * 100, 100);
 }
 
-function BudgetRow({ item, onSaved }: { item: BudgetItem; onSaved: () => void }) {
+function BudgetRow({
+  item,
+  month,
+  onSaved,
+}: {
+  item: BudgetItem;
+  month: string;
+  onSaved: () => void;
+}) {
   const [value, setValue] = useState(item.limit != null ? String(item.limit) : "");
   const [saving, setSaving] = useState(false);
 
@@ -27,7 +41,7 @@ function BudgetRow({ item, onSaved }: { item: BudgetItem; onSaved: () => void })
   const save = async () => {
     setSaving(true);
     try {
-      await api.setBudget(item.categoryId, parsed);
+      await api.setBudget(item.categoryId, parsed, month);
       onSaved();
     } finally {
       setSaving(false);
@@ -80,11 +94,29 @@ export function BudgetPage() {
   const [error, setError] = useState(false);
   const [data, setData] = useState<BudgetsResponse | null>(null);
   const [reload, setReload] = useState(0);
+  const [months, setMonths] = useState<string[]>([]);
+  const [month, setMonth] = useState(""); // "" = son ay
+
+  // Ay listesi (seçici için).
+  useEffect(() => {
+    let active = true;
+    api
+      .getMonths()
+      .then((ms) => {
+        if (!active) return;
+        setMonths(ms);
+        setMonth((cur) => (cur === "" && ms.length ? ms[0] : cur));
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [reload]);
 
   useEffect(() => {
     let active = true;
     api
-      .getBudgets()
+      .getBudgets(month)
       .then((d) => {
         if (!active) return;
         setData(d);
@@ -99,7 +131,7 @@ export function BudgetPage() {
     return () => {
       active = false;
     };
-  }, [reload]);
+  }, [reload, month]);
 
   const refresh = () => setReload((k) => k + 1);
 
@@ -115,6 +147,17 @@ export function BudgetPage() {
             {loading ? "Yükleniyor…" : data ? data.label : ""}
           </div>
         </div>
+        <select className="pill-select" value={month} onChange={(e) => setMonth(e.target.value)}>
+          {months.length === 0 ? (
+            <option value="">Bu ay</option>
+          ) : (
+            months.map((m) => (
+              <option key={m} value={m}>
+                {monthLabel(m)}
+              </option>
+            ))
+          )}
+        </select>
       </div>
 
       {error ? (
@@ -124,7 +167,7 @@ export function BudgetPage() {
       ) : (
         <>
           <section className="card">
-            <p className="eyebrow">Bu ay bütçe kullanımı</p>
+            <p className="eyebrow">Bütçe kullanımı</p>
             <div className="bud-total">
               <span className={"bud-total-spent" + (overallOver ? " over" : "")}>
                 {formatTL(data.totalSpent)}
@@ -150,7 +193,7 @@ export function BudgetPage() {
               <span className="more">Aylık limit gir</span>
             </div>
             {data.items.map((it) => (
-              <BudgetRow key={it.categoryId} item={it} onSaved={refresh} />
+              <BudgetRow key={it.categoryId} item={it} month={month} onSaved={refresh} />
             ))}
           </section>
         </>
