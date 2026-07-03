@@ -179,6 +179,11 @@ export const api = {
   getCategories: () => getJSON<ApiCategory[]>("/categories"),
   createTransaction: (input: CreateTransactionInput) =>
     postJSON<ApiTransaction>("/transactions", input),
+  updateTransaction: (
+    id: string,
+    input: { amount?: number; date?: string; description?: string; categoryId?: string },
+  ) => patchJSON<ApiTransaction>(`/transactions/${id}`, input),
+  deleteTransaction: (id: string) => delJSON<{ ok: boolean }>(`/transactions/${id}`),
   // Fis fotografini data URL (base64) olarak yolla; AI alanlari okur.
   uploadReceipt: (image: string, filename?: string) =>
     postJSON<ReceiptReview>("/receipts", { image, filename }),

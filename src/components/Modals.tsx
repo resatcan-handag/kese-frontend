@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Icon } from "../icons";
-import { api, type ApiCategory, type ReceiptReview } from "../api";
+import { api, type ApiCategory, type ReceiptReview, type ApiTransaction } from "../api";
 import { CsvImport } from "./CsvImport";
 
 function useEscapeToClose(open: boolean, onClose: () => void) {
@@ -369,6 +369,145 @@ export function ReceiptModal({
           <button className="btn" onClick={confirm} disabled={saving}>
             <Icon name="check" size={16} />
             {saving ? "Kaydediliyor…" : "Onayla ve kaydet"}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+export function EditTransactionModal({
+  open,
+  onClose,
+  txn,
+  onSaved,
+}: {
+  open: boolean;
+  onClose: () => void;
+  txn: ApiTransaction | null;
+  onSaved: () => void;
+}) {
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
+  const [amount, setAmount] = useState("");
+  const [date, setDate] = useState("");
+  const [categoryId, setCategoryId] = useState("");
+  const [description, setDescription] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  useEscapeToClose(open, onClose);
+
+  // Modal acilinca alanlari islemden doldur.
+  useEffect(() => {
+    if (!open || !txn) return;
+    setAmount(String(Number(txn.amount)));
+    setDate(txn.date.slice(0, 10));
+    setCategoryId(txn.categoryId ?? "");
+    setDescription(txn.description ?? "");
+    setErr(null);
+    api.getCategories().then(setCategories).catch(() => setCategories([]));
+  }, [open, txn]);
+
+  if (!open || !txn) return null;
+
+  const save = async () => {
+    const amt = Number(amount.replace(",", "."));
+    if (!amt || amt <= 0) {
+      setErr("Geçerli bir tutar gir.");
+      return;
+    }
+    setSaving(true);
+    setErr(null);
+    try {
+      await api.updateTransaction(txn.id, {
+        amount: amt,
+        date,
+        description: description || undefined,
+        categoryId: categoryId || undefined,
+      });
+      onSaved();
+    } catch {
+      setErr("Kaydedilemedi. Backend çalışıyor mu?");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const remove = async () => {
+    if (!window.confirm("Bu işlem silinsin mi?")) return;
+    setDeleting(true);
+    setErr(null);
+    try {
+      await api.deleteTransaction(txn.id);
+      onSaved();
+    } catch {
+      setErr("Silinemedi. Backend çalışıyor mu?");
+      setDeleting(false);
+    }
+  };
+
+  const busy = saving || deleting;
+
+  return (
+    <div className="modal-backdrop" onClick={onClose}>
+      <div className="modal" onClick={(e) => e.stopPropagation()}>
+        <div className="modal-head">
+          <span className="modal-title">İşlemi düzenle</span>
+          <button className="x" onClick={onClose} aria-label="Kapat">
+            <Icon name="x" size={18} />
+          </button>
+        </div>
+        <div className="modal-body">
+          <div className="field">
+            <label>Tutar (₺)</label>
+            <input
+              className="control amt"
+              type="number"
+              inputMode="decimal"
+              step="0.01"
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
+            />
+          </div>
+          <div className="field">
+            <label>Tarih</label>
+            <input className="control" type="date" value={date} onChange={(e) => setDate(e.target.value)} />
+          </div>
+          <div className="field">
+            <label>Kategori</label>
+            <select className="control" value={categoryId} onChange={(e) => setCategoryId(e.target.value)}>
+              <option value="">Kategorisiz</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+          <div className="field">
+            <label>Açıklama</label>
+            <input
+              className="control"
+              placeholder="Örn. haftalık market"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+            />
+          </div>
+          {err && <div className="form-err">{err}</div>}
+        </div>
+        <div className="modal-foot">
+          <button className="btn-ghost danger" onClick={remove} disabled={busy}>
+            <Icon name="x" size={16} />
+            {deleting ? "Siliniyor…" : "Sil"}
+          </button>
+          <span style={{ flex: 1 }} />
+          <button className="btn-ghost" onClick={onClose}>
+            İptal
+          </button>
+          <button className="btn" onClick={save} disabled={busy}>
+            <Icon name="check" size={16} />
+            {saving ? "Kaydediliyor…" : "Kaydet"}
           </button>
         </div>
       </div>

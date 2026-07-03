@@ -12,14 +12,14 @@ import {
   type MeResponse,
 } from "./api";
 import { formatTL, formatDateShort, initial } from "./format";
-import { AddTransactionModal, ReceiptModal } from "./components/Modals";
+import { AddTransactionModal, ReceiptModal, EditTransactionModal } from "./components/Modals";
 import { TrendChart } from "./components/TrendChart";
 import { BudgetPage } from "./components/BudgetPage";
 import { SettingsPage } from "./components/SettingsPage";
 import { AuthPage } from "./components/AuthPage";
 import { AuthContext, useAuth } from "./authContext";
 
-type Ctx = { openAdd: () => void; refreshKey: number };
+type Ctx = { openAdd: () => void; openEdit: (t: ApiTransaction) => void; refreshKey: number };
 
 function Sidebar() {
   const { me, logout } = useAuth();
@@ -70,7 +70,7 @@ function Sidebar() {
 const API_ERR = "API'ye ulaşılamadı. Backend çalışıyor mu? (http://localhost:3000/api)";
 
 function Dashboard() {
-  const { openAdd, refreshKey } = useOutletContext<Ctx>();
+  const { openAdd, openEdit, refreshKey } = useOutletContext<Ctx>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [summary, setSummary] = useState<SummaryResponse | null>(null);
@@ -214,7 +214,7 @@ function Dashboard() {
         {recent.map((t) => {
           const color = t.category?.color ?? "#888888";
           return (
-            <div className="txn" key={t.id}>
+            <div className="txn row-click" key={t.id} onClick={() => openEdit(t)}>
               <span className="txn-mono" style={{ background: color + "1f", color }}>
                 {initial(t.description)}
               </span>
@@ -234,7 +234,7 @@ function Dashboard() {
 }
 
 function Transactions() {
-  const { openAdd, refreshKey } = useOutletContext<Ctx>();
+  const { openAdd, openEdit, refreshKey } = useOutletContext<Ctx>();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [txns, setTxns] = useState<ApiTransaction[]>([]);
@@ -303,7 +303,7 @@ function Transactions() {
                 {txns.map((t) => {
                   const color = t.category?.color ?? "#888888";
                   return (
-                    <tr key={t.id}>
+                    <tr key={t.id} className="row-click" onClick={() => openEdit(t)}>
                       <td className="t-date">{formatDateShort(t.date)}</td>
                       <td>
                         <div className="t-item">
@@ -347,9 +347,19 @@ function Layout() {
   const [addOpen, setAddOpen] = useState(false);
   const [receiptOpen, setReceiptOpen] = useState(false);
   const [receiptData, setReceiptData] = useState<ReceiptReview | null>(null);
+  const [editTxn, setEditTxn] = useState<ApiTransaction | null>(null);
+  const [editOpen, setEditOpen] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
   const openAdd = () => setAddOpen(true);
+  const openEdit = (t: ApiTransaction) => {
+    setEditTxn(t);
+    setEditOpen(true);
+  };
+  const handleEdited = () => {
+    setRefreshKey((k) => k + 1);
+    setEditOpen(false);
+  };
   // Fiş taranınca AddModal'ı kapat, okunan alanları onay modalına aktar.
   const handleScanned = (review: ReceiptReview) => {
     setReceiptData(review);
@@ -369,7 +379,7 @@ function Layout() {
     <div className="app">
       <Sidebar />
       <main className="main">
-        <Outlet context={{ openAdd, refreshKey } satisfies Ctx} />
+        <Outlet context={{ openAdd, openEdit, refreshKey } satisfies Ctx} />
       </main>
       <AddTransactionModal
         open={addOpen}
@@ -382,6 +392,12 @@ function Layout() {
         onClose={() => setReceiptOpen(false)}
         data={receiptData}
         onConfirmed={handleConfirmed}
+      />
+      <EditTransactionModal
+        open={editOpen}
+        onClose={() => setEditOpen(false)}
+        txn={editTxn}
+        onSaved={handleEdited}
       />
     </div>
   );

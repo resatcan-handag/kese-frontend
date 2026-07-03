@@ -481,6 +481,21 @@ a {
 .btn-ghost:hover {
   background: #f4f6f3;
 }
+.btn-ghost.danger {
+  color: var(--coral);
+  border-color: var(--coral);
+}
+.btn-ghost.danger:hover {
+  background: #fdf1ee;
+}
+/* Tiklanabilir islem satiri (duzenle icin) */
+.row-click {
+  cursor: pointer;
+}
+.txn.row-click:hover {
+  background: #fafbfa;
+  border-radius: 10px;
+}
 .btn-ghost:focus-visible {
   outline: 2px solid var(--iris);
   outline-offset: 2px;
