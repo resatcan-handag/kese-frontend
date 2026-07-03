@@ -54,6 +54,15 @@ async function putJSON<T>(path: string, body: unknown): Promise<T> {
   return handle<T>(res);
 }
 
+async function patchJSON<T>(path: string, body: unknown): Promise<T> {
+  const res = await fetch(`${BASE}${path}`, {
+    method: "PATCH",
+    headers: authHeaders(true),
+    body: JSON.stringify(body),
+  });
+  return handle<T>(res);
+}
+
 async function delJSON<T>(path: string): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: "DELETE",
@@ -183,6 +192,8 @@ export const api = {
   getMe: () => getJSON<MeResponse>("/users/me"),
   createCategory: (input: CreateCategoryInput) =>
     postJSON<ApiCategory>("/categories", input),
+  updateCategory: (id: string, input: { name?: string; color?: string }) =>
+    patchJSON<ApiCategory>(`/categories/${id}`, input),
   deleteCategory: (id: string) => delJSON<{ ok: boolean }>(`/categories/${id}`),
   register: async (email: string, password: string) => {
     const res = await postJSON<AuthResponse>("/auth/register", { email, password });

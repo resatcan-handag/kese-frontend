@@ -13,6 +13,104 @@ function formatJoined(iso: string): string {
   });
 }
 
+// Tek kategori satiri: gorunum (ad + sil/duzenle) ve satir ici duzenleme (ad + renk).
+function CategoryRow({
+  item,
+  onChanged,
+  onDelete,
+}: {
+  item: ApiCategory;
+  onChanged: () => void;
+  onDelete: (c: ApiCategory) => void;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [name, setName] = useState(item.name);
+  const [color, setColor] = useState(item.color);
+  const [saving, setSaving] = useState(false);
+
+  // Liste yenilenince (dis veri degisince) alanlari esitle.
+  useEffect(() => {
+    setName(item.name);
+    setColor(item.color);
+  }, [item.name, item.color]);
+
+  const save = async () => {
+    const trimmed = name.trim();
+    if (!trimmed) return;
+    setSaving(true);
+    try {
+      await api.updateCategory(item.id, { name: trimmed, color });
+      setEditing(false);
+      onChanged();
+    } catch {
+      onChanged();
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const cancel = () => {
+    setName(item.name);
+    setColor(item.color);
+    setEditing(false);
+  };
+
+  if (editing) {
+    return (
+      <div className="cm-row">
+        <input
+          type="color"
+          className="color-swatch sm"
+          value={color}
+          onChange={(e) => setColor(e.target.value)}
+          aria-label="Renk"
+        />
+        <input
+          className="control cm-edit-name"
+          value={name}
+          autoFocus
+          onChange={(e) => setName(e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" && !saving) save();
+            if (e.key === "Escape") cancel();
+          }}
+        />
+        <button className="btn cm-save" onClick={save} disabled={saving}>
+          <Icon name="check" size={15} />
+          {saving ? "…" : "Kaydet"}
+        </button>
+        <button className="cm-del" onClick={cancel} title="Vazgeç" aria-label="Vazgeç">
+          <Icon name="x" size={16} />
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="cm-row">
+      <span className="cat-dot" style={{ background: item.color }} />
+      <span className="cm-name">{item.name}</span>
+      <span className="leader" />
+      <button
+        className="cm-edit"
+        onClick={() => setEditing(true)}
+        title="Düzenle"
+        aria-label={`${item.name} düzenle`}
+      >
+        <Icon name="pencil" size={16} />
+      </button>
+      <button
+        className="cm-del"
+        onClick={() => onDelete(item)}
+        title="Sil"
+        aria-label={`${item.name} sil`}
+      >
+        <Icon name="x" size={16} />
+      </button>
+    </div>
+  );
+}
+
 export function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -122,19 +220,7 @@ export function SettingsPage() {
             </div>
 
             {categories.map((c) => (
-              <div className="cm-row" key={c.id}>
-                <span className="cat-dot" style={{ background: c.color }} />
-                <span className="cm-name">{c.name}</span>
-                <span className="leader" />
-                <button
-                  className="cm-del"
-                  onClick={() => removeCategory(c)}
-                  aria-label={`${c.name} sil`}
-                  title="Sil"
-                >
-                  <Icon name="x" size={16} />
-                </button>
-              </div>
+              <CategoryRow key={c.id} item={c} onChanged={refresh} onDelete={removeCategory} />
             ))}
 
             <div className="cat-add">
