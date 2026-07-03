@@ -195,6 +195,8 @@ export const api = {
   setBudget: (categoryId: string, limit: number) =>
     putJSON<{ ok: boolean }>("/budgets", { categoryId, limit }),
   getMe: () => getJSON<MeResponse>("/users/me"),
+  changePassword: (currentPassword: string, newPassword: string) =>
+    postJSON<{ ok: boolean }>("/users/change-password", { currentPassword, newPassword }),
   createCategory: (input: CreateCategoryInput) =>
     postJSON<ApiCategory>("/categories", input),
   updateCategory: (id: string, input: { name?: string; color?: string }) =>

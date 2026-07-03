@@ -111,6 +111,91 @@ function CategoryRow({
   );
 }
 
+// Sifre degistirme karti (kendi durumunu tutar).
+function ChangePasswordCard() {
+  const [cur, setCur] = useState("");
+  const [nw, setNw] = useState("");
+  const [confirm, setConfirm] = useState("");
+  const [saving, setSaving] = useState(false);
+  const [msg, setMsg] = useState<string | null>(null);
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = async () => {
+    setMsg(null);
+    setErr(null);
+    if (nw.length < 6) {
+      setErr("Yeni şifre en az 6 karakter olmalı.");
+      return;
+    }
+    if (nw === cur) {
+      setErr("Yeni şifre eskisiyle aynı olamaz.");
+      return;
+    }
+    if (nw !== confirm) {
+      setErr("Yeni şifreler eşleşmiyor.");
+      return;
+    }
+    setSaving(true);
+    try {
+      await api.changePassword(cur, nw);
+      setMsg("Şifre güncellendi.");
+      setCur("");
+      setNw("");
+      setConfirm("");
+    } catch (e) {
+      const m = e instanceof Error ? e.message : "";
+      setErr(m === "API 400" ? "Mevcut şifre hatalı." : "Değiştirilemedi. Backend çalışıyor mu?");
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <section className="card">
+      <div className="card-head">
+        <h2 className="card-title">Şifre</h2>
+      </div>
+      <div className="field">
+        <label>Mevcut şifre</label>
+        <input
+          className="control"
+          type="password"
+          autoComplete="current-password"
+          value={cur}
+          onChange={(e) => setCur(e.target.value)}
+        />
+      </div>
+      <div className="field">
+        <label>Yeni şifre</label>
+        <input
+          className="control"
+          type="password"
+          autoComplete="new-password"
+          placeholder="En az 6 karakter"
+          value={nw}
+          onChange={(e) => setNw(e.target.value)}
+        />
+      </div>
+      <div className="field">
+        <label>Yeni şifre (tekrar)</label>
+        <input
+          className="control"
+          type="password"
+          autoComplete="new-password"
+          value={confirm}
+          onChange={(e) => setConfirm(e.target.value)}
+        />
+      </div>
+      {err && <div className="form-err">{err}</div>}
+      {msg && <div className="form-ok">{msg}</div>}
+      <button className="btn" style={{ marginTop: 12 }} onClick={submit} disabled={saving}>
+        <Icon name="check" size={16} />
+        {saving ? "Kaydediliyor…" : "Şifreyi değiştir"}
+      </button>
+    </section>
+  );
+}
+
 export function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -212,6 +297,8 @@ export function SettingsPage() {
               <span className="set-val mono">{BASE}</span>
             </div>
           </section>
+
+          <ChangePasswordCard />
 
           <section className="card">
             <div className="card-head">

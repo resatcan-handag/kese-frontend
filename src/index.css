@@ -981,6 +981,12 @@ select.control {
   font-size: 13px;
   margin-top: 4px;
 }
+.form-ok {
+  color: var(--evergreen);
+  font-size: 13px;
+  margin-top: 4px;
+  font-weight: 600;
+}
 .btn:disabled {
   opacity: 0.6;
   cursor: default;
