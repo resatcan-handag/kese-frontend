@@ -72,6 +72,9 @@ const API_ERR = "API'ye ulaşılamadı. Backend çalışıyor mu? (http://localh
 
 function Dashboard() {
   const { openAdd, openEdit, refreshKey } = useOutletContext<Ctx>();
+  const { me } = useAuth();
+  const namePart = me?.email ? me.email.split("@")[0] : "";
+  const greetName = namePart ? namePart.charAt(0).toUpperCase() + namePart.slice(1) : "";
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [summary, setSummary] = useState<SummaryResponse | null>(null);
@@ -132,8 +135,8 @@ function Dashboard() {
     <>
       <div className="topbar">
         <div>
-          <h1 className="hello">Merhaba, Ada</h1>
-          <div className="sub">İşte bu ayki harcamaların.</div>
+          <h1 className="hello">Merhaba{greetName ? `, ${greetName}` : ""}</h1>
+          <div className="sub">İşte harcamalarının özeti.</div>
         </div>
         <div className="actions">
           <button className="pill">
@@ -154,7 +157,7 @@ function Dashboard() {
           </div>
           <div className="rule" />
           <div className="compare">
-            <span>Haziran 2026</span>
+            <span>{trend?.label ?? ""}</span>
             <span>{summary.categories.length} kategori</span>
           </div>
         </div>
