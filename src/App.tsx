@@ -7,6 +7,7 @@ import {
   clearToken,
   type SummaryResponse,
   type ApiTransaction,
+  type ApiCategory,
   type TrendResponse,
   type ReceiptReview,
   type MeResponse,
@@ -238,14 +239,18 @@ function Transactions() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [txns, setTxns] = useState<ApiTransaction[]>([]);
+  const [categories, setCategories] = useState<ApiCategory[]>([]);
+  const [search, setSearch] = useState("");
+  const [catFilter, setCatFilter] = useState("");
+  const [period, setPeriod] = useState<"all" | "30d" | "90d">("all");
 
   useEffect(() => {
     let active = true;
-    api
-      .getTransactions()
-      .then((t) => {
+    Promise.all([api.getTransactions(), api.getCategories()])
+      .then(([t, cats]) => {
         if (!active) return;
         setTxns(t);
+        setCategories(cats);
         setError(false);
         setLoading(false);
       })
@@ -259,12 +264,23 @@ function Transactions() {
     };
   }, [refreshKey]);
 
+  // İstemci tarafı filtreleme (arama + kategori + dönem).
+  const q = search.trim().toLowerCase();
+  const periodMs = period === "30d" ? 30 * 86400000 : period === "90d" ? 90 * 86400000 : 0;
+  const now = Date.now();
+  const filtered = txns.filter((t) => {
+    if (q && !(t.description ?? "").toLowerCase().includes(q)) return false;
+    if (catFilter && t.categoryId !== catFilter) return false;
+    if (periodMs && now - new Date(t.date).getTime() > periodMs) return false;
+    return true;
+  });
+
   return (
     <>
       <div className="page-head">
         <div>
           <h1 className="page-title">İşlemler</h1>
-          <div className="page-sub">{loading ? "Yükleniyor…" : `${txns.length} işlem`}</div>
+          <div className="page-sub">{loading ? "Yükleniyor…" : `${filtered.length} işlem`}</div>
         </div>
         <button className="btn" onClick={openAdd}>
           <Icon name="plus" size={16} />İşlem ekle
@@ -273,20 +289,43 @@ function Transactions() {
 
       <div className="toolbar">
         <div className="search">
-          <Icon name="search" size={17} />İşlem ara
+          <Icon name="search" size={17} />
+          <input
+            className="search-input"
+            placeholder="İşlem ara"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+          />
         </div>
-        <button className="chip">
-          Kategori <Icon name="chev" size={15} />
-        </button>
-        <button className="chip">
-          Tarih <Icon name="chev" size={15} />
-        </button>
+        <select
+          className="chip-select"
+          value={catFilter}
+          onChange={(e) => setCatFilter(e.target.value)}
+        >
+          <option value="">Tüm kategoriler</option>
+          {categories.map((c) => (
+            <option key={c.id} value={c.id}>
+              {c.name}
+            </option>
+          ))}
+        </select>
+        <select
+          className="chip-select"
+          value={period}
+          onChange={(e) => setPeriod(e.target.value as "all" | "30d" | "90d")}
+        >
+          <option value="all">Tüm zamanlar</option>
+          <option value="30d">Son 30 gün</option>
+          <option value="90d">Son 90 gün</option>
+        </select>
       </div>
 
       {error ? (
         <div className="state error">{API_ERR}</div>
       ) : loading ? (
         <div className="state">Yükleniyor…</div>
+      ) : filtered.length === 0 ? (
+        <div className="state">Eşleşen işlem yok.</div>
       ) : (
         <>
           <div className="ledger-card">
@@ -300,7 +339,7 @@ function Transactions() {
                 </tr>
               </thead>
               <tbody>
-                {txns.map((t) => {
+                {filtered.map((t) => {
                   const color = t.category?.color ?? "#888888";
                   return (
                     <tr key={t.id} className="row-click" onClick={() => openEdit(t)}>
@@ -327,15 +366,7 @@ function Transactions() {
             </table>
           </div>
           <div className="table-foot">
-            <span>{txns.length} işlem</span>
-            <div className="pager">
-              <button aria-label="Önceki">
-                <Icon name="left" size={16} />
-              </button>
-              <button aria-label="Sonraki">
-                <Icon name="right" size={16} />
-              </button>
-            </div>
+            <span>{filtered.length} işlem</span>
           </div>
         </>
       )}

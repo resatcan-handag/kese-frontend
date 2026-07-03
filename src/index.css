@@ -537,6 +537,31 @@ a {
   font-family: inherit;
   color: var(--ink);
 }
+.search-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: inherit;
+  font-size: 14px;
+  color: var(--ink);
+}
+.search-input::placeholder {
+  color: var(--mist);
+}
+.chip-select {
+  height: 44px;
+  padding: 0 12px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--card);
+  color: var(--ink);
+  font-weight: 500;
+  font-size: 14px;
+  font-family: inherit;
+  cursor: pointer;
+}
 
 .ledger-card {
   background: var(--card);
