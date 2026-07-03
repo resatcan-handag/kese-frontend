@@ -91,6 +91,7 @@ export interface ApiTransaction {
 export interface SummaryResponse {
   total: number;
   categories: Array<{ category: string; color: string; amount: number }>;
+  label: string; // secili ayin etiketi (ör. "Haziran 2026")
 }
 
 export interface TrendResponse {
@@ -173,9 +174,13 @@ export interface CreateCategoryInput {
 }
 
 export const api = {
-  getSummary: () => getJSON<SummaryResponse>("/dashboard/summary"),
-  getInsights: () => getJSON<{ text: string }>("/dashboard/insights"),
-  getTrend: () => getJSON<TrendResponse>("/dashboard/trend"),
+  getSummary: (month?: string) =>
+    getJSON<SummaryResponse>(`/dashboard/summary${month ? `?month=${month}` : ""}`),
+  getInsights: (month?: string) =>
+    getJSON<{ text: string }>(`/dashboard/insights${month ? `?month=${month}` : ""}`),
+  getTrend: (month?: string) =>
+    getJSON<TrendResponse>(`/dashboard/trend${month ? `?month=${month}` : ""}`),
+  getMonths: () => getJSON<string[]>("/dashboard/months"),
   getTransactions: () => getJSON<ApiTransaction[]>("/transactions"),
   getCategories: () => getJSON<ApiCategory[]>("/categories"),
   createTransaction: (input: CreateTransactionInput) =>

@@ -70,6 +70,11 @@ function Sidebar() {
 
 const API_ERR = "API'ye ulaşılamadı. Backend çalışıyor mu? (http://localhost:3000/api)";
 
+function monthLabel(m: string): string {
+  const [y, mo] = m.split("-").map(Number);
+  return new Date(y, mo - 1, 1).toLocaleDateString("tr-TR", { month: "long", year: "numeric" });
+}
+
 function Dashboard() {
   const { openAdd, openEdit, refreshKey } = useOutletContext<Ctx>();
   const { me } = useAuth();
@@ -82,11 +87,29 @@ function Dashboard() {
   const [insightLoading, setInsightLoading] = useState(true);
   const [recent, setRecent] = useState<ApiTransaction[]>([]);
   const [trend, setTrend] = useState<TrendResponse | null>(null);
+  const [months, setMonths] = useState<string[]>([]);
+  const [month, setMonth] = useState(""); // "" = son ay (backend varsayılanı)
 
-  // Ana pano verisi (hızlı) — sayfayı bunlar açar.
+  // Ay listesi (seçici için); yoksa son aya (ilk seçenek) ayarla.
   useEffect(() => {
     let active = true;
-    Promise.all([api.getSummary(), api.getTransactions(), api.getTrend()])
+    api
+      .getMonths()
+      .then((ms) => {
+        if (!active) return;
+        setMonths(ms);
+        setMonth((cur) => (cur === "" && ms.length ? ms[0] : cur));
+      })
+      .catch(() => {});
+    return () => {
+      active = false;
+    };
+  }, [refreshKey]);
+
+  // Ana pano verisi (seçili ay) — sayfayı bunlar açar.
+  useEffect(() => {
+    let active = true;
+    Promise.all([api.getSummary(month), api.getTransactions(), api.getTrend(month)])
       .then(([s, txns, tr]) => {
         if (!active) return;
         setSummary(s);
@@ -103,14 +126,14 @@ function Dashboard() {
     return () => {
       active = false;
     };
-  }, [refreshKey]);
+  }, [refreshKey, month]);
 
   // AI içgörü ayrı yüklenir (Ollama yavaş olabilir; sayfayı bloklamasın).
   useEffect(() => {
     let active = true;
     setInsightLoading(true);
     api
-      .getInsights()
+      .getInsights(month)
       .then((ins) => {
         if (!active) return;
         setInsight(ins.text);
@@ -124,7 +147,7 @@ function Dashboard() {
     return () => {
       active = false;
     };
-  }, [refreshKey]);
+  }, [refreshKey, month]);
 
   if (loading) return <div className="state">Yükleniyor…</div>;
   if (error || !summary) return <div className="state error">{API_ERR}</div>;
@@ -139,9 +162,21 @@ function Dashboard() {
           <div className="sub">İşte harcamalarının özeti.</div>
         </div>
         <div className="actions">
-          <button className="pill">
-            Bu ay <Icon name="chev" size={15} />
-          </button>
+          <select
+            className="pill-select"
+            value={month}
+            onChange={(e) => setMonth(e.target.value)}
+          >
+            {months.length === 0 ? (
+              <option value="">Bu ay</option>
+            ) : (
+              months.map((m) => (
+                <option key={m} value={m}>
+                  {monthLabel(m)}
+                </option>
+              ))
+            )}
+          </select>
           <button className="btn" onClick={openAdd}>
             <Icon name="plus" size={16} />İşlem ekle
           </button>
@@ -150,7 +185,7 @@ function Dashboard() {
 
       <section className="hero">
         <div className="card">
-          <p className="eyebrow">Bu ay toplam</p>
+          <p className="eyebrow">Ay toplamı</p>
           <div className="total">
             <span className="cur">₺</span>
             {summary.total.toLocaleString("tr-TR")}
