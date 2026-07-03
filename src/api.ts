@@ -63,10 +63,11 @@ async function patchJSON<T>(path: string, body: unknown): Promise<T> {
   return handle<T>(res);
 }
 
-async function delJSON<T>(path: string): Promise<T> {
+async function delJSON<T>(path: string, body?: unknown): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: "DELETE",
-    headers: authHeaders(false),
+    headers: authHeaders(body !== undefined),
+    body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   return handle<T>(res);
 }
@@ -197,6 +198,8 @@ export const api = {
   getMe: () => getJSON<MeResponse>("/users/me"),
   changePassword: (currentPassword: string, newPassword: string) =>
     postJSON<{ ok: boolean }>("/users/change-password", { currentPassword, newPassword }),
+  deleteAccount: (password: string) =>
+    delJSON<{ ok: boolean }>("/users/me", { password }),
   createCategory: (input: CreateCategoryInput) =>
     postJSON<ApiCategory>("/categories", input),
   updateCategory: (id: string, input: { name?: string; color?: string }) =>

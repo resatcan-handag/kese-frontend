@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Icon } from "../icons";
 import { api, type MeResponse, type ApiCategory } from "../api";
+import { useAuth } from "../authContext";
 
 const API_ERR = "API'ye ulaşılamadı. Backend çalışıyor mu? (http://localhost:3000/api)";
 const BASE = import.meta.env.VITE_API_URL ?? "http://localhost:3000/api";
@@ -196,6 +197,60 @@ function ChangePasswordCard() {
   );
 }
 
+// Hesabı silme (tehlikeli). Şifre onayı ister; başarıda oturumu kapatır.
+function DeleteAccountCard() {
+  const { logout } = useAuth();
+  const [password, setPassword] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+
+  const submit = async () => {
+    setErr(null);
+    if (!password) {
+      setErr("Onaylamak için şifreni gir.");
+      return;
+    }
+    if (!window.confirm("Hesabın ve TÜM verilerin kalıcı olarak silinecek. Bu işlem geri alınamaz. Emin misin?")) {
+      return;
+    }
+    setBusy(true);
+    try {
+      await api.deleteAccount(password);
+      logout(); // token temizlenir → giriş ekranına döner
+    } catch (e) {
+      const m = e instanceof Error ? e.message : "";
+      setErr(m === "API 400" ? "Şifre hatalı." : "Silinemedi. Backend çalışıyor mu?");
+      setBusy(false);
+    }
+  };
+
+  return (
+    <section className="card">
+      <div className="card-head">
+        <h2 className="card-title">Hesabı sil</h2>
+      </div>
+      <p className="danger-note">
+        Bu işlem geri alınamaz. Hesabın ve tüm işlem, bütçe, kategori verilerin kalıcı olarak silinir.
+      </p>
+      <div className="field">
+        <label>Onaylamak için şifreni gir</label>
+        <input
+          className="control"
+          type="password"
+          autoComplete="current-password"
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+        />
+      </div>
+      {err && <div className="form-err">{err}</div>}
+      <button className="btn-ghost danger" style={{ marginTop: 12 }} onClick={submit} disabled={busy}>
+        <Icon name="x" size={16} />
+        {busy ? "Siliniyor…" : "Hesabımı sil"}
+      </button>
+    </section>
+  );
+}
+
 export function SettingsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -334,6 +389,8 @@ export function SettingsPage() {
             </div>
             {formErr && <div className="form-err">{formErr}</div>}
           </section>
+
+          <DeleteAccountCard />
         </>
       )}
     </>

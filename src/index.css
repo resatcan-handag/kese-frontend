@@ -992,6 +992,12 @@ select.control {
   margin-top: 4px;
   font-weight: 600;
 }
+.danger-note {
+  color: var(--mist);
+  font-size: 13.5px;
+  line-height: 1.5;
+  margin: 0 0 14px;
+}
 .btn:disabled {
   opacity: 0.6;
   cursor: default;
