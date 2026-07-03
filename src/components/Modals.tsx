@@ -28,6 +28,36 @@ function readAsDataUrl(file: File): Promise<string> {
   });
 }
 
+// Fis fotografini uzun kenari maxEdge olacak sekilde kucultup JPEG data URL dondur.
+// Boylece gonderilen govde/DB kucuk kalir ve gorsel model daha hizli okur.
+function downscaleToDataUrl(file: File, maxEdge = 1600, quality = 0.85): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const scale = Math.min(1, maxEdge / Math.max(img.width, img.height));
+      const w = Math.round(img.width * scale);
+      const h = Math.round(img.height * scale);
+      const canvas = document.createElement("canvas");
+      canvas.width = w;
+      canvas.height = h;
+      const ctx = canvas.getContext("2d");
+      if (!ctx) {
+        reject(new Error("canvas ctx yok"));
+        return;
+      }
+      ctx.drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("gorsel yuklenemedi"));
+    };
+    img.src = url;
+  });
+}
+
 type Tab = "manuel" | "fis" | "csv";
 
 export function AddTransactionModal({
@@ -97,7 +127,13 @@ export function AddTransactionModal({
     setScanErr(null);
     setScanning(true);
     try {
-      const dataUrl = await readAsDataUrl(file);
+      // Once kucult; olmazsa (nadiren) orijinali gonder.
+      let dataUrl: string;
+      try {
+        dataUrl = await downscaleToDataUrl(file);
+      } catch {
+        dataUrl = await readAsDataUrl(file);
+      }
       const review = await api.uploadReceipt(dataUrl, file.name);
       onScanned(review);
     } catch {
