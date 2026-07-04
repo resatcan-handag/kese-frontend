@@ -75,6 +75,25 @@ function monthLabel(m: string): string {
   return new Date(y, mo - 1, 1).toLocaleDateString("tr-TR", { month: "long", year: "numeric" });
 }
 
+// İşlemleri CSV olarak indir (kendi içe aktarıcımızla uyumlu: `;`, ISO tarih, TR tutar).
+function exportTransactionsCsv(rows: ApiTransaction[]) {
+  const esc = (s: string) => (/[;"\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s);
+  const header = "Tarih;Tutar;Kategori;Açıklama";
+  const lines = rows.map((t) => {
+    const date = t.date.slice(0, 10);
+    const amount = Number(t.amount).toFixed(2).replace(".", ",");
+    return [date, amount, esc(t.category?.name ?? ""), esc(t.description ?? "")].join(";");
+  });
+  const csv = "﻿" + [header, ...lines].join("\n"); // BOM: Excel'de Türkçe düzgün
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "kese-islemler.csv";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
 function Dashboard() {
   const { openAdd, openEdit, refreshKey } = useOutletContext<Ctx>();
   const { me } = useAuth();
@@ -320,9 +339,18 @@ function Transactions() {
           <h1 className="page-title">İşlemler</h1>
           <div className="page-sub">{loading ? "Yükleniyor…" : `${filtered.length} işlem`}</div>
         </div>
-        <button className="btn" onClick={openAdd}>
-          <Icon name="plus" size={16} />İşlem ekle
-        </button>
+        <div className="actions">
+          <button
+            className="btn-ghost"
+            onClick={() => exportTransactionsCsv(filtered)}
+            disabled={filtered.length === 0}
+          >
+            <Icon name="download" size={16} />Dışa aktar
+          </button>
+          <button className="btn" onClick={openAdd}>
+            <Icon name="plus" size={16} />İşlem ekle
+          </button>
+        </div>
       </div>
 
       <div className="toolbar">
