@@ -671,6 +671,7 @@ tbody tr:hover td {
 }
 .pager {
   display: flex;
+  align-items: center;
   gap: 8px;
 }
 .pager button {
@@ -683,6 +684,15 @@ tbody tr:hover td {
   cursor: pointer;
   display: grid;
   place-items: center;
+}
+.pager button:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.page-ind {
+  padding: 0 4px;
+  min-width: 46px;
+  text-align: center;
 }
 
 /* ---------- Modallar ---------- */

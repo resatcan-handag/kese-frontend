@@ -308,6 +308,13 @@ function Transactions() {
   const [search, setSearch] = useState("");
   const [catFilter, setCatFilter] = useState("");
   const [period, setPeriod] = useState<"all" | "30d" | "90d">("all");
+  const [page, setPage] = useState(1);
+  const PAGE_SIZE = 20;
+
+  // Filtre/veri değişince ilk sayfaya dön.
+  useEffect(() => {
+    setPage(1);
+  }, [search, catFilter, period, refreshKey]);
 
   useEffect(() => {
     let active = true;
@@ -339,6 +346,11 @@ function Transactions() {
     if (periodMs && now - new Date(t.date).getTime() > periodMs) return false;
     return true;
   });
+
+  // Sayfalama (istemci taraflı; filtreli liste dilimlenir).
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const current = Math.min(page, totalPages);
+  const pageItems = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
 
   return (
     <>
@@ -422,7 +434,7 @@ function Transactions() {
                 </tr>
               </thead>
               <tbody>
-                {filtered.map((t) => {
+                {pageItems.map((t) => {
                   const color = t.category?.color ?? "#888888";
                   return (
                     <tr key={t.id} className="row-click" onClick={() => openEdit(t)}>
@@ -450,6 +462,27 @@ function Transactions() {
           </div>
           <div className="table-foot">
             <span>{filtered.length} işlem</span>
+            {totalPages > 1 && (
+              <div className="pager">
+                <button
+                  disabled={current <= 1}
+                  onClick={() => setPage(current - 1)}
+                  aria-label="Önceki"
+                >
+                  <Icon name="left" size={16} />
+                </button>
+                <span className="page-ind">
+                  {current} / {totalPages}
+                </span>
+                <button
+                  disabled={current >= totalPages}
+                  onClick={() => setPage(current + 1)}
+                  aria-label="Sonraki"
+                >
+                  <Icon name="right" size={16} />
+                </button>
+              </div>
+            )}
           </div>
         </>
       )}
