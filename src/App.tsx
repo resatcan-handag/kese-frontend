@@ -235,18 +235,22 @@ function Dashboard() {
               Tümü
             </NavLink>
           </div>
-          {summary.categories.map((c) => (
-            <div className="cat-row" key={c.category}>
-              <span
-                className="cat-fill"
-                style={{ background: c.color, width: `${(c.amount / maxCat) * 100}%` }}
-              />
-              <span className="cat-dot" style={{ background: c.color }} />
-              <span className="cat-name">{c.category}</span>
-              <span className="leader" />
-              <span className="cat-amt">{formatTL(c.amount)}</span>
-            </div>
-          ))}
+          {summary.categories.length === 0 ? (
+            <div className="empty-line">Bu ay harcama yok.</div>
+          ) : (
+            summary.categories.map((c) => (
+              <div className="cat-row" key={c.category}>
+                <span
+                  className="cat-fill"
+                  style={{ background: c.color, width: `${(c.amount / maxCat) * 100}%` }}
+                />
+                <span className="cat-dot" style={{ background: c.color }} />
+                <span className="cat-name">{c.category}</span>
+                <span className="leader" />
+                <span className="cat-amt">{formatTL(c.amount)}</span>
+              </div>
+            ))
+          )}
         </div>
 
         <div className="card">
@@ -269,23 +273,27 @@ function Dashboard() {
             Tümü
           </NavLink>
         </div>
-        {recent.map((t) => {
-          const color = t.category?.color ?? "#888888";
-          return (
-            <div className="txn row-click" key={t.id} onClick={() => openEdit(t)}>
-              <span className="txn-mono" style={{ background: color + "1f", color }}>
-                {initial(t.description)}
-              </span>
-              <div className="txn-main">
-                <div className="txn-name">{t.description ?? "—"}</div>
-                <div className="txn-sub">
-                  {(t.category?.name ?? "Diğer") + " · " + formatDateShort(t.date)}
+        {recent.length === 0 ? (
+          <div className="empty-line">Henüz işlem yok.</div>
+        ) : (
+          recent.map((t) => {
+            const color = t.category?.color ?? "#888888";
+            return (
+              <div className="txn row-click" key={t.id} onClick={() => openEdit(t)}>
+                <span className="txn-mono" style={{ background: color + "1f", color }}>
+                  {initial(t.description)}
+                </span>
+                <div className="txn-main">
+                  <div className="txn-name">{t.description ?? "—"}</div>
+                  <div className="txn-sub">
+                    {(t.category?.name ?? "Diğer") + " · " + formatDateShort(t.date)}
+                  </div>
                 </div>
+                <span className="txn-amt">{formatTL(Number(t.amount))}</span>
               </div>
-              <span className="txn-amt">{formatTL(Number(t.amount))}</span>
-            </div>
-          );
-        })}
+            );
+          })
+        )}
       </section>
     </>
   );
@@ -390,6 +398,15 @@ function Transactions() {
         <div className="state error">{API_ERR}</div>
       ) : loading ? (
         <div className="state">Yükleniyor…</div>
+      ) : txns.length === 0 ? (
+        <div className="state">
+          Henüz işlem yok.
+          <div style={{ marginTop: 14 }}>
+            <button className="btn" onClick={openAdd}>
+              <Icon name="plus" size={16} />İlk işlemini ekle
+            </button>
+          </div>
+        </div>
       ) : filtered.length === 0 ? (
         <div className="state">Eşleşen işlem yok.</div>
       ) : (

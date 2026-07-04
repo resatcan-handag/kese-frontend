@@ -961,6 +961,12 @@ tbody tr:hover td {
   color: var(--mist);
   font-size: 15px;
 }
+.empty-line {
+  padding: 22px 4px;
+  text-align: center;
+  color: var(--mist);
+  font-size: 14px;
+}
 .state.error {
   color: var(--coral);
 }
