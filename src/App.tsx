@@ -564,7 +564,10 @@ export default function App() {
     api
       .getMe()
       .then((u) => {
-        if (active) setMe(u);
+        if (!active) return;
+        setMe(u);
+        // Oturumu tazele (best-effort; hata olursa mevcut token'la devam).
+        void api.refreshToken().catch(() => {});
       })
       .catch(() => {
         if (active) {

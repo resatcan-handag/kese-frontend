@@ -202,6 +202,12 @@ export const api = {
   setBudget: (categoryId: string, limit: number, month?: string) =>
     putJSON<{ ok: boolean }>("/budgets", { categoryId, limit, month }),
   getMe: () => getJSON<MeResponse>("/users/me"),
+  // Oturumu yenile: taze token al ve sakla (kayan oturum).
+  refreshToken: async () => {
+    const res = await postJSON<{ token: string }>("/users/refresh-token", {});
+    setToken(res.token);
+    return res;
+  },
   changePassword: (currentPassword: string, newPassword: string) =>
     postJSON<{ ok: boolean }>("/users/change-password", { currentPassword, newPassword }),
   deleteAccount: (password: string) =>
