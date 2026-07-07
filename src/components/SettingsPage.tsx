@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Icon } from "../icons";
 import { api, type MeResponse, type ApiCategory } from "../api";
 import { useAuth } from "../authContext";
@@ -252,6 +253,7 @@ function DeleteAccountCard() {
 }
 
 export function SettingsPage() {
+  const location = useLocation();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(false);
   const [me, setMe] = useState<MeResponse | null>(null);
@@ -283,6 +285,13 @@ export function SettingsPage() {
       active = false;
     };
   }, [reload]);
+
+  // Dashboard'dan "Yönet" (/ayarlar#kategoriler) ile gelince kategori bölümüne kaydır.
+  useEffect(() => {
+    if (!loading && location.hash === "#kategoriler") {
+      document.getElementById("kategoriler")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [loading, location.hash]);
 
   const refresh = () => setReload((k) => k + 1);
 
@@ -355,7 +364,7 @@ export function SettingsPage() {
 
           <ChangePasswordCard />
 
-          <section className="card">
+          <section className="card" id="kategoriler">
             <div className="card-head">
               <h2 className="card-title">Kategoriler</h2>
               <span className="more">{categories.length} kategori</span>

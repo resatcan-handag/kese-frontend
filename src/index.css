@@ -977,6 +977,10 @@ tbody tr:hover td {
   color: var(--mist);
   font-size: 14px;
 }
+/* Ayarlar'da kategori bölümüne kaydırınca üstte biraz boşluk kalsın */
+#kategoriler {
+  scroll-margin-top: 20px;
+}
 .state.error {
   color: var(--coral);
 }

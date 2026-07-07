@@ -231,8 +231,8 @@ function Dashboard() {
         <div className="card">
           <div className="card-head">
             <h2 className="card-title">Kategoriler</h2>
-            <NavLink className="more" to="/islemler">
-              Tümü
+            <NavLink className="more" to="/ayarlar#kategoriler">
+              Yönet
             </NavLink>
           </div>
           {summary.categories.length === 0 ? (
